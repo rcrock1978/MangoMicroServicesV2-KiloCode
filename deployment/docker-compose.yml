@@ -1,0 +1,179 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: MangoSQLServer
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourPassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourPassword123! -Q "SELECT 1"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: MangoRabbitMQ
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth API Service
+  mango-authapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.AuthAPI/Dockerfile
+    container_name: MangoAuthAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoAuthDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - Jwt__Secret=YourSuperSecretKeyForJWTTokenGeneration12345
+      - Jwt__Issuer=MangoAuthAPI
+      - Jwt__Audience=MangoClient
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5001:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Product API Service
+  mango-productapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.ProductAPI/Dockerfile
+    container_name: MangoProductAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoProductDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5002:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Shopping Cart API Service
+  mango-shoppingcartapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.ShoppingCartAPI/Dockerfile
+    container_name: MangoShoppingCartAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoCartDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5003:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Order API Service
+  mango-orderapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.OrderAPI/Dockerfile
+    container_name: MangoOrderAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoOrderDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5004:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Email API Service
+  mango-emailapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.EmailAPI/Dockerfile
+    container_name: MangoEmailAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoEmailDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5005:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Coupon API Service
+  mango-couponapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.CouponAPI/Dockerfile
+    container_name: MangoCouponAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoCouponDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5006:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # Reward API Service
+  mango-rewardapi:
+    build:
+      context: .
+      dockerfile: src/Mango.Services.RewardAPI/Dockerfile
+    container_name: MangoRewardAPI
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MangoRewardDB;User Id=sa;Password=YourPassword123!;TrustServerCertificate=True
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5007:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  # API Gateway
+  mango-gateway:
+    build:
+      context: .
+      dockerfile: src/Mango.GatewaySolution/Dockerfile
+    container_name: MangoGateway
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+    depends_on:
+      - mango-authapi
+      - mango-productapi
+      - mango-shoppingcartapi
+      - mango-orderapi
+
+  # Web Frontend
+  mango-web:
+    build:
+      context: .
+      dockerfile: src/Mango.Web/Dockerfile
+    container_name: MangoWeb
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5008:8080"
+    depends_on:
+      - mango-gateway
+
+volumes:
+  sqlserver_data:
+  rabbitmq_data:

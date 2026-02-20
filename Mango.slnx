@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Mango.Common/Mango.Common.csproj" />
+    <Project Path="src/Mango.GatewaySolution/Mango.GatewaySolution.csproj" />
+    <Project Path="src/Mango.MessageBus/Mango.MessageBus.csproj" />
+    <Project Path="src/Mango.Services.AuthAPI/Mango.Services.AuthAPI.csproj" />
+    <Project Path="src/Mango.Services.CouponAPI/Mango.Services.CouponAPI.csproj" />
+    <Project Path="src/Mango.Services.EmailAPI/Mango.Services.EmailAPI.csproj" />
+    <Project Path="src/Mango.Services.OrderAPI/Mango.Services.OrderAPI.csproj" />
+    <Project Path="src/Mango.Services.ProductAPI/Mango.Services.ProductAPI.csproj" />
+    <Project Path="src/Mango.Services.RewardAPI/Mango.Services.RewardAPI.csproj" />
+    <Project Path="src/Mango.Services.ShoppingCartAPI/Mango.Services.ShoppingCartAPI.csproj" />
+    <Project Path="src/Mango.Web/Mango.Web.csproj" />
+  </Folder>
+</Solution>
